@@ -1,28 +1,41 @@
-﻿using ReadyPlayerMe.AvatarCreator;
-using ReadyPlayerMe.Core;
+using System;
 using UnityEngine;
+using ReadyPlayerMe.Samples.AvatarCreatorWizard;
+using ReadyPlayerMe.Core;
+using ReadyPlayerMe.AvatarCreator;
 
-namespace ReadyPlayerMe.Samples.AvatarCreatorWizard
+namespace Main.Services
 {
-    public class GameManager : MonoBehaviour
+    public sealed class ReadyPlayerMeService : MonoBehaviour
     {
+
         [SerializeField] private AvatarCreatorStateMachine avatarCreatorStateMachine;
         [SerializeField] private AvatarConfig inGameConfig;
 
         private AvatarObjectLoader avatarObjectLoader;
 
-        // private void OnEnable()
-        // {
-        //     avatarCreatorStateMachine.AvatarSaved += OnAvatarSaved;
-        // }
+        public event Action<Domain.AvatarData> OnAvatarLoaded;
 
-        // private void OnDisable()
-        // {
-        //     avatarCreatorStateMachine.AvatarSaved -= OnAvatarSaved;
-        //     avatarObjectLoader?.Cancel();
-        // }
+        void OnEnable()
+        {
+            avatarCreatorStateMachine.AvatarSaved += OnAvatarSaved;
+        }
 
-        private void OnAvatarSaved(string avatarId)
+        void OnDisable()
+        {
+            avatarCreatorStateMachine.AvatarSaved -= OnAvatarSaved;
+            avatarObjectLoader?.Cancel();
+        }
+
+        private void OnAvatarSaved(string userEmail, 
+        string userName, 
+        string userId, 
+        string userToken, 
+        string avatarId, 
+        string partner, 
+        bool isExistingAvatar, 
+        BodyType bodyType, 
+        OutfitGender gender)
         {
             avatarCreatorStateMachine.gameObject.SetActive(false);
 

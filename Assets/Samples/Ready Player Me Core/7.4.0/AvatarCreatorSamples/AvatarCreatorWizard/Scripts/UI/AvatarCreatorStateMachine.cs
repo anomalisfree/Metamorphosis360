@@ -21,7 +21,7 @@ namespace ReadyPlayerMe.Samples.AvatarCreatorWizard
         [SerializeField] private ProfileManager profileManager;
         [SerializeField] private OutfitGender defaultGender = OutfitGender.None;
         [SerializeField] private ReloadPreviouslyEditedAvatar loadPreviousAvatar;
-        public Action<string> AvatarSaved;
+        public Action<string, string, string, string, string, string, bool, BodyType, OutfitGender> AvatarSaved;
 
         private AvatarAPIRequests avatarAPIRequests;
 
@@ -107,7 +107,16 @@ namespace ReadyPlayerMe.Samples.AvatarCreatorWizard
 
             if (current == StateType.End)
             {
-                AvatarSaved?.Invoke(avatarCreatorData.AvatarProperties.Id);
+                AvatarSaved?.Invoke(
+                    AuthManager.UserSession.Email,
+                    AuthManager.UserSession.Name,
+                    AuthManager.UserSession.Id,
+                    AuthManager.UserSession.Token,
+                    avatarCreatorData.AvatarProperties.Id,
+                    avatarCreatorData.AvatarProperties.Partner,
+                    avatarCreatorData.IsExistingAvatar,
+                    avatarCreatorData.AvatarProperties.BodyType,
+                    avatarCreatorData.AvatarProperties.Gender);
             }
         }
 
