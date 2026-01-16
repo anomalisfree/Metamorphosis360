@@ -6,8 +6,17 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/MapTest.unity
-    guid: 0e8beb96f29ac4689940a051d6cb879c
+    path: Assets/Main/Scenes/Splash.unity
+    guid: ef2519c87266f4c24b903eb28f5c99b9
+  - enabled: 1
+    path: Assets/Main/Scenes/Auth.unity
+    guid: 1fcf4350f97bf4e069d31ae5bbbdd75d
+  - enabled: 1
+    path: Assets/Main/Scenes/Map.unity
+    guid: ca78fd8af5e6c48c19911c865f53a6f2
+  - enabled: 1
+    path: Assets/Main/Scenes/AR.unity
+    guid: 6ca481b45cb0044b5b0b298e077e5577
   m_configObjects:
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 6ee72d15cf39dd748a13eac57397b9af, type: 2}
     UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: 0465d33c6aee55f44b0237db8b0e0259, type: 2}

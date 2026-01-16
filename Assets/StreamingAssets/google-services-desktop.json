@@ -1,0 +1,31 @@
+{
+  "project_info": {
+    "project_number": "1093328797416",
+    "project_id": "metamorphosis360-c7dc2",
+    "storage_bucket": "metamorphosis360-c7dc2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1093328797416:ios:875e57baccd450b19d135d",
+        "android_client_info": {
+          "package_name": "com.Metamorphosis.Metamorphosis360"
+        }
+      },
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrZ-SFthjQb-i8UZoaK3S0sBESORIyqrY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 0
+        },
+        "appinvite_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
