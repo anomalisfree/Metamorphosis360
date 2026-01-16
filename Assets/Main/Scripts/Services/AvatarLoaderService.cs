@@ -152,7 +152,6 @@ namespace Main.Services
                 if (animator != null)
                 {
                     animator.runtimeAnimatorController = selectedController;
-                    Debug.Log($"[AvatarLoaderService] Applied {gender} AnimatorController to avatar: {avatarId}");
                 }
             }
 

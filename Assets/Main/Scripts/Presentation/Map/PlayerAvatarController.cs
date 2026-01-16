@@ -132,7 +132,6 @@ namespace Main.Presentation.Map
             {
                 _isMoving = false;
                 SetIdleAnimation();
-                Debug.Log("[PlayerAvatarController] Stopped walking, switching to Idle");
             }
         }
 
@@ -156,7 +155,6 @@ namespace Main.Presentation.Map
                     {
                         _isMoving = true;
                         SetWalkAnimation();
-                        Debug.Log("[PlayerAvatarController] Started walking");
                     }
                 }
             }
