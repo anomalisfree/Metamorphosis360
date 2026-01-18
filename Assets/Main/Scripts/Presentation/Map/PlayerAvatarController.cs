@@ -28,6 +28,7 @@ namespace Main.Presentation.Map
         private bool _hasTargetPosition;
         private Vector3 _lastMoveDirection;
         private bool _hasMoveDirection;
+        private string _currentAvatarId;
         private float _lastMovementTime;
         private const float IdleTimeoutSeconds = 0.5f;
 
@@ -83,7 +84,14 @@ namespace Main.Presentation.Map
                 return;
             }
 
-            Debug.Log("[PlayerAvatarController] Loading player avatar...");
+            var avatarData = AvatarDataRepository.Load();
+            if (avatarData == null || string.IsNullOrEmpty(avatarData.AvatarId))
+            {
+                Debug.LogWarning("[PlayerAvatarController] No saved avatar data found");
+                return;
+            }
+
+            _currentAvatarId = avatarData.AvatarId;
             avatarLoaderService.LoadCurrentUserAvatar(transform);
         }
 
@@ -105,7 +113,6 @@ namespace Main.Presentation.Map
             
             if (_avatarInstance != null)
             {
-                // Аватар всегда телепортируется на целевую позицию (центр карты)
                 _avatarInstance.transform.position = newTarget;
             }
             
@@ -164,7 +171,8 @@ namespace Main.Presentation.Map
 
         private void HandleAvatarLoaded(string avatarId, GameObject avatar)
         {
-            Debug.Log($"[PlayerAvatarController] Avatar loaded: {avatarId}");
+            if (avatarId != _currentAvatarId)
+                return;
 
             _avatarInstance = avatar;
             _avatarInstance.transform.SetParent(transform);

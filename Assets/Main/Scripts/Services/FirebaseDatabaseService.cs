@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Firebase;
 using Firebase.Database;
 using Firebase.Extensions;
@@ -149,6 +148,40 @@ namespace Main.Services
 
                     playerRef.Child("IsOnline").SetValueAsync(true);
                 }
+            };
+        }
+
+        public void SubscribeToPlayers(
+            Action<string, string> onPlayerAdded,
+            Action<string, string> onPlayerChanged,
+            Action<string> onPlayerRemoved)
+        {
+            if (!IsInitialized)
+                return;
+
+            var playersRef = _database.Child("players");
+
+            playersRef.ChildAdded += (sender, args) =>
+            {
+                if (args.Snapshot.Exists)
+                {
+                    var json = args.Snapshot.GetRawJsonValue();
+                    onPlayerAdded?.Invoke(args.Snapshot.Key, json);
+                }
+            };
+
+            playersRef.ChildChanged += (sender, args) =>
+            {
+                if (args.Snapshot.Exists)
+                {
+                    var json = args.Snapshot.GetRawJsonValue();
+                    onPlayerChanged?.Invoke(args.Snapshot.Key, json);
+                }
+            };
+
+            playersRef.ChildRemoved += (sender, args) =>
+            {
+                onPlayerRemoved?.Invoke(args.Snapshot.Key);
             };
         }
 
