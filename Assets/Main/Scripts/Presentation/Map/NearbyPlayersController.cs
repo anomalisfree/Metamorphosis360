@@ -18,6 +18,14 @@ namespace Main.Presentation.Map
         [SerializeField] private float avatarScale = 1f;
         [SerializeField] private float avatarHeightOffset = 0f;
 
+        [Header("Movement")]
+        [SerializeField] private float moveSpeed = 3f;
+        [SerializeField] private float rotationSpeed = 10f;
+        [SerializeField] private float arrivalThreshold = 0.1f;
+
+        [Header("Animation")]
+        [SerializeField] private string walkAnimParam = "Walk";
+
         private readonly Dictionary<string, NearbyPlayerAvatar> _playerAvatars = new();
 
         private void OnEnable()
@@ -59,7 +67,7 @@ namespace Main.Presentation.Map
 
             foreach (var kvp in _playerAvatars)
             {
-                UpdateAvatarPosition(kvp.Value);
+                UpdateAvatarMovement(kvp.Value);
             }
         }
 
@@ -71,18 +79,24 @@ namespace Main.Presentation.Map
             var container = new GameObject($"Player_{playerId}");
             container.transform.SetParent(transform);
 
+            var targetPos = GetWorldPosition(playerData);
+
             var avatar = new NearbyPlayerAvatar
             {
                 PlayerId = playerId,
                 PlayerData = playerData,
                 Container = container,
                 AvatarInstance = null,
-                IsLoading = true
+                IsLoading = true,
+                TargetPosition = targetPos,
+                IsMoving = false,
+                Animator = null
             };
+
+            container.transform.position = targetPos;
 
             _playerAvatars[playerId] = avatar;
 
-            UpdateAvatarPosition(avatar);
             LoadPlayerAvatar(playerData.AvatarId, playerData.AvatarGender, container.transform);
         }
 
@@ -92,13 +106,14 @@ namespace Main.Presentation.Map
                 return;
 
             avatar.PlayerData = playerData;
+            avatar.TargetPosition = GetWorldPosition(playerData);
 
-            // Check if avatar changed
             if (avatar.AvatarInstance != null && 
                 avatar.PlayerData.AvatarId != playerData.AvatarId)
             {
                 Destroy(avatar.AvatarInstance);
                 avatar.AvatarInstance = null;
+                avatar.Animator = null;
                 avatar.IsLoading = true;
                 LoadPlayerAvatar(playerData.AvatarId, playerData.AvatarGender, avatar.Container.transform);
             }
@@ -129,9 +144,12 @@ namespace Main.Presentation.Map
                     {
                         avatar.AvatarInstance = avatarInstance;
                         avatar.IsLoading = false;
+                        avatar.Animator = avatarInstance.GetComponentInChildren<Animator>();
 
                         avatarInstance.transform.localPosition = Vector3.zero;
                         avatarInstance.transform.localScale = Vector3.one * avatarScale;
+
+                        SetIdleAnimation(avatar);
                     }
                 }
             }
@@ -151,26 +169,97 @@ namespace Main.Presentation.Map
             avatarLoaderService.LoadAvatar(avatarId, gender, parent);
         }
 
-        private void UpdateAvatarPosition(NearbyPlayerAvatar avatar)
+        private Vector3 GetWorldPosition(PlayerLocationData playerData)
         {
-            if (avatar.Container == null || map == null)
-                return;
-
-            if (avatar.PlayerData.Latitude == 0 && avatar.PlayerData.Longitude == 0)
-            {
-                Debug.LogWarning($"[NearbyPlayersController] Invalid coordinates for {avatar.PlayerId}: (0, 0)");
-                return;
-            }
+            if (playerData.Latitude == 0 && playerData.Longitude == 0)
+                return Vector3.zero;
 
             var latLon = new Mapbox.Utils.Vector2d(
-                avatar.PlayerData.Latitude,
-                avatar.PlayerData.Longitude
+                playerData.Latitude,
+                playerData.Longitude
             );
 
             var worldPos = map.GeoToWorldPosition(latLon, true);
             worldPos.y += avatarHeightOffset;
 
-            avatar.Container.transform.position = worldPos;
+            return worldPos;
+        }
+
+        private void UpdateAvatarMovement(NearbyPlayerAvatar avatar)
+        {
+            if (avatar.Container == null || map == null)
+                return;
+
+            avatar.TargetPosition = GetWorldPosition(avatar.PlayerData);
+
+            var currentPos = avatar.Container.transform.position;
+            var targetPos = avatar.TargetPosition;
+            var distance = Vector3.Distance(currentPos, targetPos);
+
+            if (distance > arrivalThreshold)
+            {
+                var direction = (targetPos - currentPos).normalized;
+                var newPos = Vector3.MoveTowards(currentPos, targetPos, moveSpeed * Time.deltaTime);
+                avatar.Container.transform.position = newPos;
+
+                if (avatar.AvatarInstance != null && direction.sqrMagnitude > 0.001f)
+                {
+                    direction.y = 0;
+                    if (direction.sqrMagnitude > 0.001f)
+                    {
+                        var targetRotation = Quaternion.LookRotation(direction);
+                        avatar.AvatarInstance.transform.rotation = Quaternion.Slerp(
+                            avatar.AvatarInstance.transform.rotation,
+                            targetRotation,
+                            Time.deltaTime * rotationSpeed
+                        );
+                    }
+                }
+
+                if (!avatar.IsMoving)
+                {
+                    avatar.IsMoving = true;
+                    SetWalkAnimation(avatar);
+                }
+            }
+            else
+            {
+                avatar.Container.transform.position = targetPos;
+
+                if (avatar.IsMoving)
+                {
+                    avatar.IsMoving = false;
+                    SetIdleAnimation(avatar);
+                }
+            }
+        }
+
+        private void SetWalkAnimation(NearbyPlayerAvatar avatar)
+        {
+            if (avatar.Animator == null)
+                return;
+
+            TrySetAnimatorBool(avatar.Animator, walkAnimParam, true);
+        }
+
+        private void SetIdleAnimation(NearbyPlayerAvatar avatar)
+        {
+            if (avatar.Animator == null)
+                return;
+
+            TrySetAnimatorBool(avatar.Animator, walkAnimParam, false);
+        }
+
+        private void TrySetAnimatorBool(Animator animator, string paramName, bool value)
+        {
+            foreach (var param in animator.parameters)
+            {
+                if (param.name == paramName && param.type == AnimatorControllerParameterType.Bool)
+                {
+                    animator.SetBool(paramName, value);
+                    return;
+                }
+            }
         }
 
         private void ClearAllAvatars()
@@ -193,6 +282,9 @@ namespace Main.Presentation.Map
             public GameObject Container;
             public GameObject AvatarInstance;
             public bool IsLoading;
+            public Vector3 TargetPosition;
+            public bool IsMoving;
+            public Animator Animator;
         }
     }
 }
