@@ -25,8 +25,12 @@
 	<key>IS_GCM_ENABLED</key>
 	<true></true>
 	<key>IS_SIGNIN_ENABLED</key>
-	<true></true>
+	<false></false>
 	<key>GOOGLE_APP_ID</key>
 	<string>1:1093328797416:ios:875e57baccd450b19d135d</string>
+	<key>CLIENT_ID</key>
+	<string>1093328797416-b7vj4kfjvuk4tas03u0ag2lepseeirom.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1093328797416-b7vj4kfjvuk4tas03u0ag2lepseeirom</string>
 </dict>
 </plist>

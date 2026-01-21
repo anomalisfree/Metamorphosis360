@@ -2,13 +2,13 @@ using System;
 using Firebase;
 using Firebase.Database;
 using Firebase.Extensions;
+using Main.Core;
 using UnityEngine;
 
 namespace Main.Services
 {
     public sealed class FirebaseDatabaseService : MonoBehaviour
     {
-        private const string DATABASE_URL = "https://metamorphosis360-c7dc2-default-rtdb.firebaseio.com/";
 
         public static FirebaseDatabaseService Instance { get; private set; }
 
@@ -43,7 +43,8 @@ namespace Main.Services
                 var dependencyStatus = task.Result;
                 if (dependencyStatus == DependencyStatus.Available)
                 {
-                    var database = FirebaseDatabase.GetInstance(FirebaseApp.DefaultInstance, DATABASE_URL);
+                    var databaseUrl = FirebaseConfigReader.DatabaseUrl;
+                    var database = FirebaseDatabase.GetInstance(FirebaseApp.DefaultInstance, databaseUrl);
                     _database = database.RootReference;
                     IsInitialized = true;
                     OnInitialized?.Invoke();
@@ -56,6 +57,8 @@ namespace Main.Services
                 }
             });
         }
+
+        #region Players
 
         public void SetPlayerLocation(string playerId, object data, Action onSuccess = null, Action<string> onError = null)
         {
@@ -218,6 +221,147 @@ namespace Main.Services
                 onPlayerRemoved?.Invoke(args.Snapshot.Key);
             };
         }
+
+        #endregion
+
+        #region Events
+
+        public void SubscribeToEvents(
+            Action<string, string> onEventAdded,
+            Action<string, string> onEventChanged,
+            Action<string> onEventRemoved)
+        {
+            if (!IsInitialized)
+                return;
+
+            var eventsRef = _database.Child("events");
+
+            eventsRef.ChildAdded += (sender, args) =>
+            {
+                if (args.Snapshot.Exists)
+                {
+                    var json = args.Snapshot.GetRawJsonValue();
+                    onEventAdded?.Invoke(args.Snapshot.Key, json);
+                }
+            };
+
+            eventsRef.ChildChanged += (sender, args) =>
+            {
+                if (args.Snapshot.Exists)
+                {
+                    var json = args.Snapshot.GetRawJsonValue();
+                    onEventChanged?.Invoke(args.Snapshot.Key, json);
+                }
+            };
+
+            eventsRef.ChildRemoved += (sender, args) =>
+            {
+                onEventRemoved?.Invoke(args.Snapshot.Key);
+            };
+        }
+
+        public void CreateEvent(object eventData, Action<string> onSuccess = null, Action<string> onError = null)
+        {
+            if (!IsInitialized)
+            {
+                onError?.Invoke("Firebase not initialized");
+                return;
+            }
+
+            var newEventRef = _database.Child("events").Push();
+            var eventId = newEventRef.Key;
+
+            var json = JsonUtility.ToJson(eventData);
+            newEventRef.SetRawJsonValueAsync(json).ContinueWithOnMainThread(task =>
+            {
+                if (task.IsFaulted || task.IsCanceled)
+                {
+                    var error = task.Exception?.Message ?? "Unknown error";
+                    Debug.LogError($"[FirebaseDatabaseService] Failed to create event: {error}");
+                    onError?.Invoke(error);
+                }
+                else
+                {
+                    onSuccess?.Invoke(eventId);
+                }
+            });
+        }
+
+        public void UpdateEvent(string eventId, object eventData, Action onSuccess = null, Action<string> onError = null)
+        {
+            if (!IsInitialized)
+            {
+                onError?.Invoke("Firebase not initialized");
+                return;
+            }
+
+            var json = JsonUtility.ToJson(eventData);
+            _database.Child("events").Child(eventId).SetRawJsonValueAsync(json).ContinueWithOnMainThread(task =>
+            {
+                if (task.IsFaulted || task.IsCanceled)
+                {
+                    var error = task.Exception?.Message ?? "Unknown error";
+                    Debug.LogError($"[FirebaseDatabaseService] Failed to update event: {error}");
+                    onError?.Invoke(error);
+                }
+                else
+                {
+                    onSuccess?.Invoke();
+                }
+            });
+        }
+
+        public void DeleteEvent(string eventId, Action onSuccess = null, Action<string> onError = null)
+        {
+            if (!IsInitialized)
+            {
+                onError?.Invoke("Firebase not initialized");
+                return;
+            }
+
+            _database.Child("events").Child(eventId).RemoveValueAsync().ContinueWithOnMainThread(task =>
+            {
+                if (task.IsFaulted || task.IsCanceled)
+                {
+                    var error = task.Exception?.Message ?? "Unknown error";
+                    Debug.LogError($"[FirebaseDatabaseService] Failed to delete event: {error}");
+                    onError?.Invoke(error);
+                }
+                else
+                {
+                    onSuccess?.Invoke();
+                }
+            });
+        }
+
+        public void GetAllEvents(Action<string> onSuccess, Action<string> onError = null)
+        {
+            if (!IsInitialized)
+            {
+                onError?.Invoke("Firebase not initialized");
+                return;
+            }
+
+            _database.Child("events").GetValueAsync().ContinueWithOnMainThread(task =>
+            {
+                if (task.IsFaulted || task.IsCanceled)
+                {
+                    var error = task.Exception?.Message ?? "Unknown error";
+                    Debug.LogError($"[FirebaseDatabaseService] Failed to get events: {error}");
+                    onError?.Invoke(error);
+                }
+                else if (task.Result.Exists)
+                {
+                    onSuccess?.Invoke(task.Result.GetRawJsonValue());
+                }
+                else
+                {
+                    onSuccess?.Invoke("{}");
+                }
+            });
+        }
+
+        #endregion
 
         private void OnApplicationPause(bool pauseStatus)
         {
