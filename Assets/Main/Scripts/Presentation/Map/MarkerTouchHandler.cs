@@ -13,6 +13,8 @@ namespace Main.Presentation.Map
         [SerializeField] private float maxRaycastDistance = 1000f;
         [SerializeField] private LayerMask markerLayerMask = ~0; // All layers by default
 
+        private EventMarkerVisual _selectedMarker;
+
         private void Awake()
         {
             if (raycastCamera == null)
@@ -73,10 +75,21 @@ namespace Main.Presentation.Map
 
         private void HandleMarkerClick(EventMarkerClickHandler clickHandler)
         {
-            // Invoke the handler's click action
+            if (_selectedMarker != null)
+            {
+                _selectedMarker.SetSelected(false);
+            }
+
+            var markerVisual = clickHandler.GetComponent<EventMarkerVisual>();
+            if (markerVisual != null)
+            {
+                markerVisual.SetSelected(true);
+                _selectedMarker = markerVisual;
+            }
+
+
             clickHandler.HandleClick();
 
-            // Show event details panel if available
             if (eventDetailsPanel != null && clickHandler.EventData != null)
             {
                 eventDetailsPanel.Show(clickHandler.EventData);
@@ -109,6 +122,16 @@ namespace Main.Presentation.Map
         public void SetEventDetailsPanel(EventDetailsPanel panel)
         {
             eventDetailsPanel = panel;
+        }
+
+        /// Deselect the currently selected marker.
+        public void DeselectCurrentMarker()
+        {
+            if (_selectedMarker != null)
+            {
+                _selectedMarker.SetSelected(false);
+                _selectedMarker = null;
+            }
         }
     }
 }
