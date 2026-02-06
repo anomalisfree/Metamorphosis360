@@ -105,10 +105,10 @@ namespace Main.Presentation.Auth
 
         private void OnAuthInitialized()
         {
-            //  ShowLoginPanel();
-            //  return;
-
             Debug.Log("[AuthViewController] Auth initialized, checking for existing user");
+            
+            // ShowLoginPanel();
+            // return;
             
             _authService.TryAutoSignIn(
                 onSuccess: user =>
