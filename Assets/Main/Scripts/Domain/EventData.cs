@@ -18,7 +18,7 @@ namespace Main.Domain
         public bool IsActive;
         public string ImageUrl;
         public string ExternalLink;
-        public int Radius; // activation radius in meters
+        public int Radius;
         public string CreatorId;
 
         public EventData() { }
@@ -39,7 +39,7 @@ namespace Main.Domain
             CreatedAt = now;
             UpdatedAt = now;
             IsActive = true;
-            Radius = 50;    // default radius
+            Radius = 50;  
         }
 
         public bool IsCurrentlyActive()

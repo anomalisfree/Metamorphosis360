@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f14affcf3dba04a748a27bb3e8005e74, type: 3}
+  m_Name: AvatarCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::Main.Infrastructure.AvatarCatalog
+  avatars:
+  - id: 1
+    displayName: Man
+    prefab: {fileID: 919132149155446097, guid: 218015cac0f5d469484ce5b870bf7119, type: 3}
+    previewSprite: {fileID: 21300000, guid: 37bfd32526b284be5b36f5922e1402ee, type: 3}
+    category: 1
+    animatorController: {fileID: 9100000, guid: 7899e2210503d46048dfd59c88e87cbc, type: 2}
+  - id: 2
+    displayName: Woman
+    prefab: {fileID: 919132149155446097, guid: 318c461663a5243409f65f237dcef5e0, type: 3}
+    previewSprite: {fileID: 21300000, guid: 945e2fa37a454426394ffe0488668e3d, type: 3}
+    category: 2
+    animatorController: {fileID: 9100000, guid: 0e2d22bb2a8e64fa09e21c3b232e28cd, type: 2}
+  defaultAvatarId: avatar_default

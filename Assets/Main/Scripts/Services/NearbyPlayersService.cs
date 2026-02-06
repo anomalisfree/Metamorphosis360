@@ -6,6 +6,10 @@ using UnityEngine;
 
 namespace Main.Services
 {
+    /// <summary>
+    /// Сервис отслеживания ближайших игроков.
+    /// Использует UserDataRepository вместо AvatarDataRepository.
+    /// </summary>
     public sealed class NearbyPlayersService : MonoBehaviour
     {
         [Header("Dependencies")]
@@ -28,8 +32,8 @@ namespace Main.Services
 
         private void OnEnable()
         {
-            var avatarData = AvatarDataRepository.Load();
-            _currentUserId = avatarData?.UserId;
+            var userData = UserDataRepository.Load();
+            _currentUserId = userData?.UserId;
 
             if (firebaseService != null)
             {

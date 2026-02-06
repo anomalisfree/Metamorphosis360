@@ -7,10 +7,8 @@ namespace Main.Services
     public sealed class LocationService : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float desiredAccuracyMeters = 5f;
         [SerializeField] private float updateDistanceMeters = 5f;
         [SerializeField] private float updateIntervalSeconds = 1f;
-        [SerializeField] private float initTimeoutSeconds = 20f;
 
         [Header("Editor Testing")]
         [Tooltip("Use these coordinates when running in the Unity Editor")]

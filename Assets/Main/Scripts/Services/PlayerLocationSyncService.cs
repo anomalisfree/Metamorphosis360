@@ -5,6 +5,10 @@ using UnityEngine;
 
 namespace Main.Services
 {
+    /// <summary>
+    /// Сервис синхронизации местоположения игрока с Firebase.
+    /// Использует UserData вместо AvatarData.
+    /// </summary>
     public sealed class PlayerLocationSyncService : MonoBehaviour
     {
         [Header("Dependencies")]
@@ -19,7 +23,7 @@ namespace Main.Services
 
         public event Action<PlayerLocationData> OnLocationSynced;
 
-        private AvatarData _avatarData;
+        private UserData _userData;
         private PlayerLocationData _playerLocationData;
         private Vector2d _lastSyncedLocation;
         private float _timeSinceLastSync;
@@ -75,22 +79,22 @@ namespace Main.Services
 
         private void Initialize()
         {
-            _avatarData = AvatarDataRepository.Load();
+            _userData = UserDataRepository.Load();
 
-            if (_avatarData == null)
+            if (_userData == null)
             {
-                Debug.LogWarning("[PlayerLocationSyncService] No avatar data found, sync disabled");
+                Debug.LogWarning("[PlayerLocationSyncService] No user data found, sync disabled");
                 return;
             }
 
             _playerLocationData = new PlayerLocationData(
-                _avatarData,
+                _userData,
                 locationService.CurrentLocation.x,
                 locationService.CurrentLocation.y
             );
 
             firebaseService.SetPlayerLocation(
-                _avatarData.UserId,
+                _userData.UserId,
                 _playerLocationData,
                 onSuccess: () =>
                 {
@@ -98,7 +102,7 @@ namespace Main.Services
                     IsSyncing = true;
                     _lastSyncedLocation = locationService.CurrentLocation;
 
-                    firebaseService.SetupPresence(_avatarData.UserId);
+                    firebaseService.SetupPresence(_userData.UserId);
                 },
                 onError: error =>
                 {
@@ -125,7 +129,7 @@ namespace Main.Services
             _playerLocationData.UpdateLocation(location.x, location.y);
 
             firebaseService.UpdatePlayerLocation(
-                _avatarData.UserId,
+                _userData.UserId,
                 location.x,
                 location.y,
                 onSuccess: () =>
@@ -139,9 +143,9 @@ namespace Main.Services
 
         private void SetPlayerOffline()
         {
-            if (_avatarData != null && firebaseService != null && firebaseService.IsInitialized)
+            if (_userData != null && firebaseService != null && firebaseService.IsInitialized)
             {
-                firebaseService.SetPlayerOffline(_avatarData.UserId);
+                firebaseService.SetPlayerOffline(_userData.UserId);
             }
 
             IsSyncing = false;

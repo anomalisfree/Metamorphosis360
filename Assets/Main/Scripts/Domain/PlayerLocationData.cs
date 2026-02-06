@@ -8,7 +8,6 @@ namespace Main.Domain
         public string UserId;
         public string UserName;
         public string AvatarId;
-        public string AvatarGender;
         public double Latitude;
         public double Longitude;
         public long CreatedAt;
@@ -17,14 +16,13 @@ namespace Main.Domain
 
         public PlayerLocationData() { }
 
-        public PlayerLocationData(AvatarData avatarData, double latitude, double longitude)
+        public PlayerLocationData(UserData userData, double latitude, double longitude)
         {
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             
-            UserId = avatarData.UserId;
-            UserName = avatarData.UserName;
-            AvatarId = avatarData.AvatarId;
-            AvatarGender = avatarData.AvatarOutfitGender.ToString();
+            UserId = userData.UserId;
+            UserName = userData.DisplayName;
+            AvatarId = userData.AvatarId;
             Latitude = latitude;
             Longitude = longitude;
             CreatedAt = now;

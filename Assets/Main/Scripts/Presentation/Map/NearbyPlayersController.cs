@@ -3,7 +3,6 @@ using Main.Domain;
 using Main.Services;
 using UnityEngine;
 using Mapbox.Unity.Map;
-using ReadyPlayerMe.Core;
 
 namespace Main.Presentation.Map
 {
@@ -11,7 +10,7 @@ namespace Main.Presentation.Map
     {
         [Header("Dependencies")]
         [SerializeField] private NearbyPlayersService nearbyPlayersService;
-        [SerializeField] private AvatarLoaderService avatarLoaderService;
+        [SerializeField] private AvatarService avatarService;
         [SerializeField] private AbstractMap map;
 
         [Header("Settings")]
@@ -37,9 +36,9 @@ namespace Main.Presentation.Map
                 nearbyPlayersService.OnPlayerDisappeared += HandlePlayerDisappeared;
             }
 
-            if (avatarLoaderService != null)
+            if (avatarService != null)
             {
-                avatarLoaderService.OnAvatarLoaded += HandleAvatarLoaded;
+                avatarService.OnAvatarLoaded += HandleAvatarLoaded;
             }
         }
 
@@ -52,9 +51,9 @@ namespace Main.Presentation.Map
                 nearbyPlayersService.OnPlayerDisappeared -= HandlePlayerDisappeared;
             }
 
-            if (avatarLoaderService != null)
+            if (avatarService != null)
             {
-                avatarLoaderService.OnAvatarLoaded -= HandleAvatarLoaded;
+                avatarService.OnAvatarLoaded -= HandleAvatarLoaded;
             }
 
             ClearAllAvatars();
@@ -97,7 +96,7 @@ namespace Main.Presentation.Map
 
             _playerAvatars[playerId] = avatar;
 
-            LoadPlayerAvatar(playerData.AvatarId, playerData.AvatarGender, container.transform);
+            LoadPlayerAvatar(playerData.AvatarId, container.transform);
         }
 
         private void HandlePlayerUpdated(string playerId, PlayerLocationData playerData)
@@ -115,7 +114,7 @@ namespace Main.Presentation.Map
                 avatar.AvatarInstance = null;
                 avatar.Animator = null;
                 avatar.IsLoading = true;
-                LoadPlayerAvatar(playerData.AvatarId, playerData.AvatarGender, avatar.Container.transform);
+                LoadPlayerAvatar(playerData.AvatarId, avatar.Container.transform);
             }
         }
 
@@ -155,18 +154,12 @@ namespace Main.Presentation.Map
             }
         }
 
-        private void LoadPlayerAvatar(string avatarId, string genderString, Transform parent)
+        private void LoadPlayerAvatar(string avatarId, Transform parent)
         {
-            if (avatarLoaderService == null || string.IsNullOrEmpty(avatarId))
+            if (avatarService == null || string.IsNullOrEmpty(avatarId))
                 return;
 
-            var gender = OutfitGender.Neutral;
-            if (!string.IsNullOrEmpty(genderString))
-            {
-                System.Enum.TryParse(genderString, out gender);
-            }
-
-            avatarLoaderService.LoadAvatar(avatarId, gender, parent);
+            avatarService.LoadAvatar(avatarId, parent);
         }
 
         private Vector3 GetWorldPosition(PlayerLocationData playerData)

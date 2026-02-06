@@ -4,18 +4,20 @@ using Main.Infrastructure;
 
 namespace Main.Presentation.Map
 {
+    /// <summary>
+    /// Контроллер аватара текущего игрока на карте.
+    /// Использует AvatarService и UserDataRepository.
+    /// </summary>
     public sealed class PlayerAvatarController : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private AvatarLoaderService avatarLoaderService;
+        [SerializeField] private AvatarService avatarService;
         [SerializeField] private Services.LocationService locationService;
 
         [Header("Avatar Settings")]
         [SerializeField] private float avatarScale = 0.5f;
         [SerializeField] private float avatarYOffset = 0f;
         [SerializeField] private float rotationSpeed = 10f;
-        [SerializeField] private float moveSpeed = 5f;
-        [SerializeField] private float walkThreshold = 0.00001f;
 
         [Header("Animation")]
         [SerializeField] private string walkAnimParam = "Walk";
@@ -38,10 +40,10 @@ namespace Main.Presentation.Map
 
         private void OnEnable()
         {
-            if (avatarLoaderService != null)
+            if (avatarService != null)
             {
-                avatarLoaderService.OnAvatarLoaded += HandleAvatarLoaded;
-                avatarLoaderService.OnAvatarLoadFailed += HandleAvatarLoadFailed;
+                avatarService.OnAvatarLoaded += HandleAvatarLoaded;
+                avatarService.OnAvatarLoadFailed += HandleAvatarLoadFailed;
             }
 
             if (locationService != null)
@@ -52,10 +54,10 @@ namespace Main.Presentation.Map
 
         private void OnDisable()
         {
-            if (avatarLoaderService != null)
+            if (avatarService != null)
             {
-                avatarLoaderService.OnAvatarLoaded -= HandleAvatarLoaded;
-                avatarLoaderService.OnAvatarLoadFailed -= HandleAvatarLoadFailed;
+                avatarService.OnAvatarLoaded -= HandleAvatarLoaded;
+                avatarService.OnAvatarLoadFailed -= HandleAvatarLoadFailed;
             }
 
             if (locationService != null)
@@ -66,33 +68,33 @@ namespace Main.Presentation.Map
 
         private void Start()
         {
-            if (AvatarDataRepository.HasSavedAvatar)
+            if (UserDataRepository.HasSavedUser)
             {
                 LoadAvatar();
             }
             else
             {
-                Debug.LogWarning("[PlayerAvatarController] No saved avatar found");
+                Debug.LogWarning("[PlayerAvatarController] No saved user found");
             }
         }
 
         public void LoadAvatar()
         {
-            if (avatarLoaderService == null)
+            if (avatarService == null)
             {
-                Debug.LogError("[PlayerAvatarController] AvatarLoaderService not assigned");
+                Debug.LogError("[PlayerAvatarController] AvatarService not assigned");
                 return;
             }
 
-            var avatarData = AvatarDataRepository.Load();
-            if (avatarData == null || string.IsNullOrEmpty(avatarData.AvatarId))
+            var userData = UserDataRepository.Load();
+            if (userData == null || string.IsNullOrEmpty(userData.AvatarId))
             {
-                Debug.LogWarning("[PlayerAvatarController] No saved avatar data found");
+                Debug.LogWarning("[PlayerAvatarController] No saved user data or avatar found");
                 return;
             }
 
-            _currentAvatarId = avatarData.AvatarId;
-            avatarLoaderService.LoadCurrentUserAvatar(transform);
+            _currentAvatarId = userData.AvatarId;
+            avatarService.LoadCurrentUserAvatar(transform);
         }
 
         public void ReloadAvatar()

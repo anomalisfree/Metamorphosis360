@@ -13,15 +13,18 @@ namespace Main.Core
 
         private void Awake()
         {
+            DontDestroyOnLoad(gameObject);
+            
             _bootstrap = GameBootstrap.Instance;
 
             if (_bootstrap != null)
             {
                 _bootstrap.StateMachine.OnStateChanged += HandleStateChanged;
+                Debug.Log("[AppFlowController] Subscribed to StateMachine");
             }
             else
             {
-                Debug.LogError("AppFlowController: GameBootstrap instance not found!");
+                Debug.LogError("[AppFlowController] GameBootstrap instance not found!");
             }
         }
 
@@ -35,6 +38,8 @@ namespace Main.Core
 
         private void HandleStateChanged(AppState prev, AppState next)
         {
+            Debug.Log($"[AppFlowController] State changed: {prev} -> {next}");
+            
             switch (next)
             {
                 case AppState.Boot:
@@ -54,8 +59,11 @@ namespace Main.Core
 
         private IEnumerator Load(string sceneName)
         {
+            Debug.Log($"[AppFlowController] Loading scene: {sceneName}");
+            
             if (sceneLoader == null)
             {
+                Debug.LogError("[AppFlowController] SceneLoader is null!");
                 yield break;
             }
 
