@@ -113,6 +113,14 @@ namespace Main.Presentation.Auth
             _authService.TryAutoSignIn(
                 onSuccess: user =>
                 {
+                    if (user.IsGuest)
+                    {
+                        Debug.Log("[AuthViewController] Previous session was guest, showing login");
+                        _authService.SignOut();
+                        ShowLoginPanel();
+                        return;
+                    }
+                    
                     if (user.HasAvatar)
                     {
                         GoToMap();
