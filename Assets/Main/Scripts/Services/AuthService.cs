@@ -357,7 +357,7 @@ namespace Main.Services
                 displayName: !string.IsNullOrEmpty(displayName) ? displayName : 
                              !string.IsNullOrEmpty(firebaseUser.DisplayName) ? firebaseUser.DisplayName : 
                              isGuest ? "Guest" : "User",
-                avatarId: "", // Будет выбран на следующем экране
+                avatarId: "", 
                 isGuest: isGuest
             );
         }

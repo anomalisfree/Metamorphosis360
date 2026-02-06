@@ -4,10 +4,6 @@ using Main.Infrastructure;
 
 namespace Main.Presentation.Map
 {
-    /// <summary>
-    /// Контроллер аватара текущего игрока на карте.
-    /// Использует AvatarService и UserDataRepository.
-    /// </summary>
     public sealed class PlayerAvatarController : MonoBehaviour
     {
         [Header("References")]
