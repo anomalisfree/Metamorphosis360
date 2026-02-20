@@ -6,14 +6,9 @@ using UnityEngine;
 
 namespace Main.Services
 {
-    /// <summary>
-    /// Сервис отслеживания ближайших игроков.
-    /// Использует UserDataRepository вместо AvatarDataRepository.
-    /// </summary>
     public sealed class NearbyPlayersService : MonoBehaviour
     {
         [Header("Dependencies")]
-        [SerializeField] private FirebaseDatabaseService firebaseService;
         [SerializeField] private LocationService locationService;
 
         [Header("Settings")]
@@ -35,6 +30,7 @@ namespace Main.Services
             var userData = UserDataRepository.Load();
             _currentUserId = userData?.UserId;
 
+            var firebaseService = FirebaseDatabaseService.Instance;
             if (firebaseService != null)
             {
                 if (firebaseService.IsInitialized)
@@ -50,6 +46,7 @@ namespace Main.Services
 
         private void OnDisable()
         {
+            var firebaseService = FirebaseDatabaseService.Instance;
             if (firebaseService != null)
             {
                 firebaseService.OnInitialized -= SubscribeToPlayers;
@@ -63,7 +60,7 @@ namespace Main.Services
             if (_isSubscribed)
                 return;
 
-            firebaseService.SubscribeToPlayers(
+            FirebaseDatabaseService.Instance?.SubscribeToPlayers(
                 OnPlayerAdded,
                 OnPlayerChanged,
                 OnPlayerRemoved

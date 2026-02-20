@@ -2,7 +2,9 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Main.Core;
 using Main.Domain;
+using Main.Infrastructure;
 using DomainEventType = Main.Domain.EventType;
 
 namespace Main.Presentation.Map
@@ -135,9 +137,30 @@ namespace Main.Presentation.Map
 
         private void HandleActionClick()
         {
-            if (_currentEvent != null)
+            if (_currentEvent == null)
+                return;
+
+            OnActionClicked?.Invoke(_currentEvent);
+
+            if (_currentEvent.IsCurrentlyActive())
             {
-                OnActionClicked?.Invoke(_currentEvent);
+                StartARGame(_currentEvent);
+            }
+        }
+
+        private void StartARGame(EventData eventData)
+        {
+            Debug.Log($"[EventDetailsPanel] Starting AR game for event: {eventData.Title}");
+            ARSessionData.StartSession(eventData);
+            Hide();
+            
+            if (GameBootstrap.Instance?.StateMachine != null)
+            {
+                GameBootstrap.Instance.StateMachine.SetState(AppState.AR);
+            }
+            else
+            {
+                Debug.LogError("[EventDetailsPanel] GameBootstrap or StateMachine is null!");
             }
         }
 

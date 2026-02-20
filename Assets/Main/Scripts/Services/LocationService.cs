@@ -9,6 +9,8 @@ namespace Main.Services
         [Header("Settings")]
         [SerializeField] private float updateDistanceMeters = 5f;
         [SerializeField] private float updateIntervalSeconds = 1f;
+        [SerializeField] private float desiredAccuracyMeters = 10f;
+        [SerializeField] private float initTimeoutSeconds = 20f;
 
         [Header("Editor Testing")]
         [Tooltip("Use these coordinates when running in the Unity Editor")]

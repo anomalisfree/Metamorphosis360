@@ -32,7 +32,7 @@ namespace Main.Services
             }
 
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            // DontDestroyOnLoad не нужен - это дочерний объект GameBootstrap
         }
 
         private void Start()
@@ -42,6 +42,11 @@ namespace Main.Services
 
         private void OnDestroy()
         {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+            
             if (_auth != null)
             {
                 _auth.StateChanged -= OnAuthStateChanged;

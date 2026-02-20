@@ -1,5 +1,6 @@
 using UnityEngine;
 using Mapbox.Unity.Map;
+using Main.Infrastructure;
 using Main.Services;
 
 namespace Main.Presentation.Map
@@ -10,6 +11,13 @@ namespace Main.Presentation.Map
         [SerializeField] private AbstractMap map;
         [SerializeField] private Services.LocationService locationService;
         [SerializeField] private PlayerAvatarController playerAvatarController;
+        [SerializeField] private PlayerLocationSyncService playerLocationSyncService;
+        
+        [Header("AR Result UI")]
+        [SerializeField] private GameObject arResultPopup;
+        [SerializeField] private TMPro.TextMeshProUGUI arResultTitleText;
+        [SerializeField] private TMPro.TextMeshProUGUI arResultScoreText;
+        [SerializeField] private UnityEngine.UI.Button arResultCloseButton;
 
         [Header("Map Settings")]
         [SerializeField] private int initialZoom = 16;
@@ -25,6 +33,20 @@ namespace Main.Presentation.Map
             {
                 map.InitializeOnStart = false;
             }
+            
+            // Настраиваем popup результата AR
+            if (arResultPopup != null)
+            {
+                arResultPopup.SetActive(false);
+            }
+            
+            if (arResultCloseButton != null)
+            {
+                arResultCloseButton.onClick.AddListener(HideARResultPopup);
+            }
+            
+            // Инициализируем PlayerLocationSyncService с LocationService
+            InitializeLocationSyncService();
         }
 
         private void OnEnable()
@@ -34,6 +56,9 @@ namespace Main.Presentation.Map
                 locationService.OnLocationUpdated += HandleLocationUpdated;
                 locationService.OnLocationError += HandleLocationError;
             }
+            
+            CheckARGameResult();
+            InitializeLocationSyncService();
         }
 
         private void OnDisable()
@@ -42,6 +67,23 @@ namespace Main.Presentation.Map
             {
                 locationService.OnLocationUpdated -= HandleLocationUpdated;
                 locationService.OnLocationError -= HandleLocationError;
+            }
+        }
+        
+        private void OnDestroy()
+        {
+            if (arResultCloseButton != null)
+            {
+                arResultCloseButton.onClick.RemoveListener(HideARResultPopup);
+            }
+        }
+
+        private void InitializeLocationSyncService()
+        {
+            if (playerLocationSyncService != null && locationService != null)
+            {
+                playerLocationSyncService.SetLocationService(locationService);
+                Debug.Log("[MapController] LocationService assigned to PlayerLocationSyncService");
             }
         }
 
@@ -133,5 +175,55 @@ namespace Main.Presentation.Map
                 map.UpdateMap(map.CenterLatitudeLongitude, zoom);
             }
         }
+        
+        #region AR Result Handling
+        
+        private void CheckARGameResult()
+        {
+            var result = ARSessionData.LastGameResult;
+            
+            if (result == null)
+            {
+                return;
+            }
+            
+            Debug.Log($"[MapController] AR game result found - Success: {result.IsSuccess}, Score: {result.Score}");
+            
+            ShowARResultPopup(result);
+            
+            // Очищаем данные сессии
+            ARSessionData.Clear();
+        }
+        
+        private void ShowARResultPopup(ARGameResult result)
+        {
+            if (arResultPopup == null)
+            {
+                Debug.Log("[MapController] AR result popup not configured, skipping");
+                return;
+            }
+            
+            if (arResultTitleText != null)
+            {
+                arResultTitleText.text = result.IsSuccess ? "Success!" : "Game Over";
+            }
+            
+            if (arResultScoreText != null)
+            {
+                arResultScoreText.text = $"Score: {result.Score}";
+            }
+            
+            arResultPopup.SetActive(true);
+        }
+        
+        private void HideARResultPopup()
+        {
+            if (arResultPopup != null)
+            {
+                arResultPopup.SetActive(false);
+            }
+        }
+        
+        #endregion
     }
 }

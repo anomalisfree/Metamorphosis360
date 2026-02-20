@@ -44,9 +44,6 @@ namespace Main.Presentation.Auth
         [Header("Loading")]
         [SerializeField] private TextMeshProUGUI loadingText;
 
-        [Header("Dependencies")]
-        [SerializeField] private AvatarService avatarService;
-
         private AuthService _authService;
         private string _selectedAvatarId;
         private UserData _pendingUser;
@@ -106,9 +103,6 @@ namespace Main.Presentation.Auth
         private void OnAuthInitialized()
         {
             Debug.Log("[AuthViewController] Auth initialized, checking for existing user");
-            
-            // ShowLoginPanel();
-            // return;
             
             _authService.TryAutoSignIn(
                 onSuccess: user =>
@@ -358,6 +352,7 @@ namespace Main.Presentation.Auth
 
         private void PopulateAvatarGrid()
         {
+            var avatarService = AvatarService.Instance;
             if (avatarService == null || avatarService.Catalog == null)
             {
                 Debug.LogError("[AuthViewController] AvatarService or Catalog is null!");
@@ -394,7 +389,7 @@ namespace Main.Presentation.Auth
         {
             _selectedAvatarId = avatarId;
             
-            var avatarEntry = avatarService?.GetAvatarInfo(avatarId);
+            var avatarEntry = AvatarService.Instance?.GetAvatarInfo(avatarId);
             if (avatarEntry != null)
             {
                 if (selectedAvatarNameText != null)

@@ -10,7 +10,6 @@ namespace Main.Presentation.Map
     {
         [Header("Dependencies")]
         [SerializeField] private NearbyPlayersService nearbyPlayersService;
-        [SerializeField] private AvatarService avatarService;
         [SerializeField] private AbstractMap map;
 
         [Header("Settings")]
@@ -36,6 +35,7 @@ namespace Main.Presentation.Map
                 nearbyPlayersService.OnPlayerDisappeared += HandlePlayerDisappeared;
             }
 
+            var avatarService = AvatarService.Instance;
             if (avatarService != null)
             {
                 avatarService.OnAvatarLoaded += HandleAvatarLoaded;
@@ -51,6 +51,7 @@ namespace Main.Presentation.Map
                 nearbyPlayersService.OnPlayerDisappeared -= HandlePlayerDisappeared;
             }
 
+            var avatarService = AvatarService.Instance;
             if (avatarService != null)
             {
                 avatarService.OnAvatarLoaded -= HandleAvatarLoaded;
@@ -156,6 +157,7 @@ namespace Main.Presentation.Map
 
         private void LoadPlayerAvatar(string avatarId, Transform parent)
         {
+            var avatarService = AvatarService.Instance;
             if (avatarService == null || string.IsNullOrEmpty(avatarId))
                 return;
 

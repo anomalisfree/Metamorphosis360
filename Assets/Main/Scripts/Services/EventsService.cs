@@ -9,15 +9,14 @@ namespace Main.Services
 {
     public sealed class EventsService : MonoBehaviour
     {
-        [Header("Dependencies")]
-        [SerializeField] private FirebaseDatabaseService firebaseService;
-        [SerializeField] private LocationService locationService;
+        public static EventsService Instance { get; private set; }
 
         [Header("Settings")]
         [SerializeField] private float visibilityRadiusKm = 5f;
         [SerializeField] private bool showExpiredEvents = false;
 
         public IReadOnlyDictionary<string, EventData> Events => _events;
+        public bool IsInitialized => _isSubscribed;
 
         public event Action<string, EventData> OnEventAppeared;
         public event Action<string, EventData> OnEventUpdated;
@@ -25,30 +24,54 @@ namespace Main.Services
 
         private readonly Dictionary<string, EventData> _events = new();
         private bool _isSubscribed;
+        private FirebaseDatabaseService _firebaseService;
+        private LocationService _locationService;
 
-        private void OnEnable()
+        private void Awake()
         {
-            if (firebaseService != null)
+            if (Instance != null && Instance != this)
             {
-                if (firebaseService.IsInitialized)
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+        }
+
+        private void Start()
+        {
+            _firebaseService = FirebaseDatabaseService.Instance;
+            
+            if (_firebaseService != null)
+            {
+                if (_firebaseService.IsInitialized)
                 {
                     SubscribeToEvents();
                 }
                 else
                 {
-                    firebaseService.OnInitialized += SubscribeToEvents;
+                    _firebaseService.OnInitialized += SubscribeToEvents;
                 }
             }
         }
 
-        private void OnDisable()
+        private void OnDestroy()
         {
-            if (firebaseService != null)
+            if (Instance == this)
             {
-                firebaseService.OnInitialized -= SubscribeToEvents;
+                Instance = null;
             }
 
-            UnsubscribeFromEvents();
+            if (_firebaseService != null)
+            {
+                _firebaseService.OnInitialized -= SubscribeToEvents;
+                _firebaseService.UnsubscribeFromEvents();
+            }
+        }
+
+        public void SetLocationService(LocationService locationService)
+        {
+            _locationService = locationService;
         }
 
         private void SubscribeToEvents()
@@ -56,7 +79,7 @@ namespace Main.Services
             if (_isSubscribed)
                 return;
 
-            firebaseService.SubscribeToEvents(
+            _firebaseService.SubscribeToEvents(
                 OnEventAdded,
                 OnEventChanged,
                 OnEventRemovedFromDb
@@ -65,21 +88,12 @@ namespace Main.Services
             _isSubscribed = true;
         }
 
-        private void UnsubscribeFromEvents()
-        {
-            _events.Clear();
-            _isSubscribed = false;
-        }
-
         private void OnEventAdded(string eventId, string json)
         {
             var eventData = JsonUtility.FromJson<EventData>(json);
             eventData.Id = eventId;
 
-            if (!IsEventValid(eventData))
-                return;
-
-            if (!IsEventNearby(eventData))
+            if (!IsEventValid(eventData) || !IsEventNearby(eventData))
                 return;
 
             _events[eventId] = eventData;
@@ -148,10 +162,10 @@ namespace Main.Services
 
         private bool IsEventNearby(EventData eventData)
         {
-            if (locationService == null || !locationService.IsRunning)
+            if (_locationService == null || !_locationService.IsRunning)
                 return true;
 
-            var currentLocation = locationService.CurrentLocation;
+            var currentLocation = _locationService.CurrentLocation;
             var distance = CalculateDistanceKm(
                 currentLocation.x, currentLocation.y,
                 eventData.Latitude, eventData.Longitude

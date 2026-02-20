@@ -3575,65 +3575,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!1 &1315721691
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1315721693}
-  - component: {fileID: 1315721694}
-  - component: {fileID: 1315721695}
-  m_Layer: 0
-  m_Name: AUTH_SERVICE
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1315721693
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1315721691}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1315721694
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1315721691}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 83b1afd8bcc374d3dbbcdf52f0195a9f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Main.Services.AuthService
---- !u!114 &1315721695
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1315721691}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9af113e87350a4db3ad26bddab71d130, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Main.Services.AvatarService
-  avatarCatalog: {fileID: 11400000, guid: 22e1f58d603064864ad39aa5bb61c2a1, type: 2}
-  cacheInstances: 1
 --- !u!1 &1381901034
 GameObject:
   m_ObjectHideFlags: 0
@@ -5233,7 +5174,7 @@ MonoBehaviour:
   selectedAvatarNameText: {fileID: 1508496546}
   selectedAvatarPreview: {fileID: 273991221}
   loadingText: {fileID: 1648158488}
-  avatarService: {fileID: 1315721695}
+  avatarService: {fileID: 0}
 --- !u!114 &1697503541
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6720,7 +6661,6 @@ CanvasRenderer:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1315721693}
   - {fileID: 1697503544}
   - {fileID: 60708986}
   - {fileID: 219690629}

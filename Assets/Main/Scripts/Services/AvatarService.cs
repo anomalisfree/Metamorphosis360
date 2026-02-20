@@ -8,6 +8,8 @@ namespace Main.Services
 {
     public sealed class AvatarService : MonoBehaviour
     {
+        public static AvatarService Instance { get; private set; }
+
         [Header("Dependencies")]
         [SerializeField] private AvatarCatalog avatarCatalog;
         
@@ -18,6 +20,23 @@ namespace Main.Services
 
         private readonly Dictionary<string, GameObject> _instanceCache = new();
         public AvatarCatalog Catalog => avatarCatalog;
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+            
+            // Загружаем каталог из Resources если не назначен
+            if (avatarCatalog == null)
+            {
+                avatarCatalog = Resources.Load<AvatarCatalog>("AvatarCatalog");
+            }
+        }
 
         public GameObject LoadCurrentUserAvatar(Transform parent = null)
         {
@@ -50,9 +69,20 @@ namespace Main.Services
             {
                 if (cached != null)
                 {
-                    Debug.Log($"[AvatarService] Using cached avatar: {avatarId}");
                     var instance = Instantiate(cached, parent);
                     instance.SetActive(true);
+                    
+                    // Применяем AnimatorController из каталога
+                    var cachedEntry = avatarCatalog.GetById(avatarId);
+                    if (cachedEntry?.AnimatorController != null)
+                    {
+                        var animator = instance.GetComponentInChildren<Animator>();
+                        if (animator != null)
+                        {
+                            animator.runtimeAnimatorController = cachedEntry.AnimatorController;
+                        }
+                    }
+                    
                     OnAvatarLoaded?.Invoke(avatarId, instance);
                     return instance;
                 }
@@ -135,6 +165,10 @@ namespace Main.Services
 
         private void OnDestroy()
         {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
             ClearCache();
         }
 

@@ -1,4 +1,5 @@
 using System.Collections;
+using Main.Services;
 using UnityEngine;
 
 namespace Main.Core
@@ -26,6 +27,8 @@ namespace Main.Core
 
             StateMachine = new AppStateMachine();
             StateMachine.SetState(AppState.Boot);
+            
+            EnsurePersistentServices();
         }
 
         private IEnumerator Start()
@@ -34,6 +37,39 @@ namespace Main.Core
             {
                 yield return null;
                 StateMachine.SetState(AppState.Auth);
+            }
+        }
+
+        private void EnsurePersistentServices()
+        {
+            // Порядок важен: Firebase → Auth → Avatar → Events
+            
+            if (FirebaseDatabaseService.Instance == null)
+            {
+                var obj = new GameObject("FirebaseDatabaseService");
+                obj.transform.SetParent(transform);
+                obj.AddComponent<FirebaseDatabaseService>();
+            }
+
+            if (AuthService.Instance == null)
+            {
+                var obj = new GameObject("AuthService");
+                obj.transform.SetParent(transform);
+                obj.AddComponent<AuthService>();
+            }
+
+            if (AvatarService.Instance == null)
+            {
+                var obj = new GameObject("AvatarService");
+                obj.transform.SetParent(transform);
+                obj.AddComponent<AvatarService>();
+            }
+
+            if (EventsService.Instance == null)
+            {
+                var obj = new GameObject("EventsService");
+                obj.transform.SetParent(transform);
+                obj.AddComponent<EventsService>();
             }
         }
     }

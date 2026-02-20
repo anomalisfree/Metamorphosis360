@@ -66,9 +66,27 @@ namespace Main.Core
 
         private static void LoadConfig()
         {
-            var plistPath = GetPlistPath();
+            // Try Resources first (works on all platforms including iOS)
+            var textAsset = Resources.Load<TextAsset>("GoogleService-Info");
+            if (textAsset != null)
+            {
+                try
+                {
+                    ParsePlist(textAsset.text);
+                    Debug.Log("[FirebaseConfigReader] Loaded config from Resources/GoogleService-Info.txt");
+                    return;
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[FirebaseConfigReader] Failed to parse Resources config: {e.Message}");
+                }
+            }
             
-            if (string.IsNullOrEmpty(plistPath) || !File.Exists(plistPath))
+#if UNITY_EDITOR
+            // Fallback for Editor - read from Assets folder
+            var plistPath = Path.Combine(Application.dataPath, PLIST_FILENAME);
+            
+            if (!File.Exists(plistPath))
             {
                 Debug.LogError($"[FirebaseConfigReader] Could not find {PLIST_FILENAME} at path: {plistPath}");
                 return;
@@ -84,22 +102,8 @@ namespace Main.Core
             {
                 Debug.LogError($"[FirebaseConfigReader] Failed to read {PLIST_FILENAME}: {e.Message}");
             }
-        }
-
-        private static string GetPlistPath()
-        {
-#if UNITY_EDITOR
-            // In Editor, the file is in Assets folder
-            return Path.Combine(Application.dataPath, PLIST_FILENAME);
-#elif UNITY_IOS
-            // On iOS, the file is copied to the app bundle
-            return Path.Combine(Application.streamingAssetsPath, PLIST_FILENAME);
 #else
-            // On other platforms, try StreamingAssets first, then dataPath
-            var streamingPath = Path.Combine(Application.streamingAssetsPath, PLIST_FILENAME);
-            if (File.Exists(streamingPath))
-                return streamingPath;
-            return Path.Combine(Application.dataPath, PLIST_FILENAME);
+            Debug.LogError("[FirebaseConfigReader] Could not load GoogleService-Info from Resources");
 #endif
         }
 

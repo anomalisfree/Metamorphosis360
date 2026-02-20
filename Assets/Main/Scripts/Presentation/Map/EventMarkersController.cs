@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Main.Domain;
 using Main.Services;
@@ -9,9 +10,9 @@ namespace Main.Presentation.Map
     public sealed class EventMarkersController : MonoBehaviour
     {
         [Header("Dependencies")]
-        [SerializeField] private EventsService eventsService;
         [SerializeField] private AbstractMap map;
         [SerializeField] private EventDetailsPanel eventDetailsPanel;
+        [SerializeField] private Services.LocationService locationService;
 
         [Header("Marker Prefabs (Optional - will create dynamically if null)")]
         [SerializeField] private GameObject defaultMarkerPrefab;
@@ -31,32 +32,104 @@ namespace Main.Presentation.Map
 
         private readonly Dictionary<string, EventMarker> _markers = new();
         private MarkerTouchHandler _touchHandler;
+        private EventsService _eventsService;
+        private bool _isSubscribed;
 
         private void Awake()
         {
             EnsureTouchHandler();
         }
 
+        private void Start()
+        {
+            StartCoroutine(InitializeWithRetry());
+        }
+
+        private IEnumerator InitializeWithRetry()
+        {
+            float timeout = 10f;
+            float elapsed = 0f;
+            
+            while (EventsService.Instance == null && elapsed < timeout)
+            {
+                yield return new WaitForSeconds(0.5f);
+                elapsed += 0.5f;
+            }
+
+            _eventsService = EventsService.Instance;
+
+            if (_eventsService == null)
+            {
+                Debug.LogError("[EventMarkersController] EventsService not found");
+                yield break;
+            }
+
+            if (locationService != null)
+            {
+                _eventsService.SetLocationService(locationService);
+            }
+
+            elapsed = 0f;
+            while (!_eventsService.IsInitialized && elapsed < timeout)
+            {
+                yield return new WaitForSeconds(0.5f);
+                elapsed += 0.5f;
+            }
+
+            SubscribeToEvents();
+            yield return new WaitForSeconds(1f);
+            RestoreMarkersFromEvents();
+        }
+
         private void OnEnable()
         {
-            if (eventsService != null)
+            if (_eventsService != null && !_isSubscribed)
             {
-                eventsService.OnEventAppeared += HandleEventAppeared;
-                eventsService.OnEventUpdated += HandleEventUpdated;
-                eventsService.OnEventRemoved += HandleEventRemoved;
+                SubscribeToEvents();
+                RestoreMarkersFromEvents();
             }
         }
 
         private void OnDisable()
         {
-            if (eventsService != null)
-            {
-                eventsService.OnEventAppeared -= HandleEventAppeared;
-                eventsService.OnEventUpdated -= HandleEventUpdated;
-                eventsService.OnEventRemoved -= HandleEventRemoved;
-            }
-
+            UnsubscribeFromEvents();
             ClearAllMarkers();
+        }
+
+        private void SubscribeToEvents()
+        {
+            if (_eventsService == null || _isSubscribed)
+                return;
+
+            _eventsService.OnEventAppeared += HandleEventAppeared;
+            _eventsService.OnEventUpdated += HandleEventUpdated;
+            _eventsService.OnEventRemoved += HandleEventRemoved;
+            _isSubscribed = true;
+        }
+
+        private void UnsubscribeFromEvents()
+        {
+            if (_eventsService == null || !_isSubscribed)
+                return;
+
+            _eventsService.OnEventAppeared -= HandleEventAppeared;
+            _eventsService.OnEventUpdated -= HandleEventUpdated;
+            _eventsService.OnEventRemoved -= HandleEventRemoved;
+            _isSubscribed = false;
+        }
+
+        private void RestoreMarkersFromEvents()
+        {
+            if (_eventsService == null)
+                return;
+
+            foreach (var kvp in _eventsService.Events)
+            {
+                if (!_markers.ContainsKey(kvp.Key))
+                {
+                    HandleEventAppeared(kvp.Key, kvp.Value);
+                }
+            }
         }
 
         private void EnsureTouchHandler()
@@ -66,7 +139,6 @@ namespace Main.Presentation.Map
             if (_touchHandler == null)
             {
                 _touchHandler = gameObject.AddComponent<MarkerTouchHandler>();
-                Debug.Log("[EventMarkersController] Created MarkerTouchHandler");
             }
 
             if (eventDetailsPanel != null)
@@ -104,7 +176,6 @@ namespace Main.Presentation.Map
             }
             else
             {
-                Debug.LogWarning($"[EventMarkersController] No prefab for event type: {eventData.Type}");
                 return;
             }
 

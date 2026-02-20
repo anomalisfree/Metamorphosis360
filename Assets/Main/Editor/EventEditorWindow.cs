@@ -84,7 +84,8 @@ namespace Main.Editor
                     _statusType = MessageType.Error;
                     _isLoading = false;
                 }
-                Repaint();
+                
+                EditorApplication.delayCall += Repaint;
             });
         }
 
@@ -315,7 +316,7 @@ namespace Main.Editor
                     _statusType = MessageType.Info;
                 }
 
-                Repaint();
+                EditorApplication.delayCall += Repaint;
             });
         }
 
@@ -415,7 +416,7 @@ namespace Main.Editor
                 LoadAllEvents();
             }
 
-            Repaint();
+            EditorApplication.delayCall += Repaint;
         }
 
         private void DeleteEvent()
@@ -445,7 +446,7 @@ namespace Main.Editor
                         LoadAllEvents();
                     }
 
-                    Repaint();
+                    EditorApplication.delayCall += Repaint;
                 });
         }
 

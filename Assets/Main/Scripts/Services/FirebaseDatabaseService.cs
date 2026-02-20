@@ -18,6 +18,11 @@ namespace Main.Services
         public event Action<string> OnError;
 
         private DatabaseReference _database;
+    
+        private EventHandler<ChildChangedEventArgs> _eventAddedHandler;
+        private EventHandler<ChildChangedEventArgs> _eventChangedHandler;
+        private EventHandler<ChildChangedEventArgs> _eventRemovedHandler;
+        private DatabaseReference _eventsRef;
 
         private void Awake()
         {
@@ -28,7 +33,6 @@ namespace Main.Services
             }
 
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
 
         private void Start()
@@ -40,18 +44,37 @@ namespace Main.Services
         {
             FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
             {
+                if (task.IsFaulted || task.IsCanceled)
+                {
+                    var error = task.Exception?.Flatten().Message ?? "Task canceled";
+                    Debug.LogError($"[FirebaseDatabaseService] {error}");
+                    OnError?.Invoke(error);
+                    return;
+                }
+                
                 var dependencyStatus = task.Result;
+                
                 if (dependencyStatus == DependencyStatus.Available)
                 {
-                    var databaseUrl = FirebaseConfigReader.DatabaseUrl;
-                    var database = FirebaseDatabase.GetInstance(FirebaseApp.DefaultInstance, databaseUrl);
-                    _database = database.RootReference;
-                    IsInitialized = true;
-                    OnInitialized?.Invoke();
+                    try
+                    {
+                        var databaseUrl = FirebaseConfigReader.DatabaseUrl;
+                        var database = FirebaseDatabase.GetInstance(FirebaseApp.DefaultInstance, databaseUrl);
+                        _database = database.RootReference;
+                        IsInitialized = true;
+                        
+                        Debug.Log("[FirebaseDatabaseService] Initialized");
+                        OnInitialized?.Invoke();
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"[FirebaseDatabaseService] {e.Message}");
+                        OnError?.Invoke(e.Message);
+                    }
                 }
                 else
                 {
-                    var error = $"Could not resolve Firebase dependencies: {dependencyStatus}";
+                    var error = $"Firebase dependencies: {dependencyStatus}";
                     Debug.LogError($"[FirebaseDatabaseService] {error}");
                     OnError?.Invoke(error);
                 }
@@ -234,30 +257,75 @@ namespace Main.Services
             if (!IsInitialized)
                 return;
 
-            var eventsRef = _database.Child("events");
+            UnsubscribeFromEvents();
 
-            eventsRef.ChildAdded += (sender, args) =>
+            _eventsRef = _database.Child("events");
+
+            _eventAddedHandler = (sender, args) =>
             {
-                if (args.Snapshot.Exists)
+                if (args?.Snapshot != null && args.Snapshot.Exists)
                 {
                     var json = args.Snapshot.GetRawJsonValue();
-                    onEventAdded?.Invoke(args.Snapshot.Key, json);
+                    if (!string.IsNullOrEmpty(json))
+                    {
+                        onEventAdded?.Invoke(args.Snapshot.Key, json);
+                    }
                 }
             };
 
-            eventsRef.ChildChanged += (sender, args) =>
+            _eventChangedHandler = (sender, args) =>
             {
-                if (args.Snapshot.Exists)
+                if (args?.Snapshot != null && args.Snapshot.Exists)
                 {
                     var json = args.Snapshot.GetRawJsonValue();
-                    onEventChanged?.Invoke(args.Snapshot.Key, json);
+                    if (!string.IsNullOrEmpty(json))
+                    {
+                        onEventChanged?.Invoke(args.Snapshot.Key, json);
+                    }
                 }
             };
 
-            eventsRef.ChildRemoved += (sender, args) =>
+            _eventRemovedHandler = (sender, args) =>
             {
-                onEventRemoved?.Invoke(args.Snapshot.Key);
+                if (args?.Snapshot != null)
+                {
+                    onEventRemoved?.Invoke(args.Snapshot.Key);
+                }
             };
+
+            _eventsRef.ChildAdded += _eventAddedHandler;
+            _eventsRef.ChildChanged += _eventChangedHandler;
+            _eventsRef.ChildRemoved += _eventRemovedHandler;
+            
+            Debug.Log("[FirebaseDatabaseService] Subscribed to events");
+        }
+
+        public void UnsubscribeFromEvents()
+        {
+            if (_eventsRef == null)
+                return;
+
+            if (_eventAddedHandler != null)
+            {
+                _eventsRef.ChildAdded -= _eventAddedHandler;
+                _eventAddedHandler = null;
+            }
+
+            if (_eventChangedHandler != null)
+            {
+                _eventsRef.ChildChanged -= _eventChangedHandler;
+                _eventChangedHandler = null;
+            }
+
+            if (_eventRemovedHandler != null)
+            {
+                _eventsRef.ChildRemoved -= _eventRemovedHandler;
+                _eventRemovedHandler = null;
+            }
+
+            _eventsRef = null;
+            
+            Debug.Log("[FirebaseDatabaseService] Unsubscribed from events");
         }
 
         public void CreateEvent(object eventData, Action<string> onSuccess = null, Action<string> onError = null)

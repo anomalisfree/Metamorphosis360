@@ -7,7 +7,6 @@ namespace Main.Presentation.Map
     public sealed class PlayerAvatarController : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private AvatarService avatarService;
         [SerializeField] private Services.LocationService locationService;
 
         [Header("Avatar Settings")]
@@ -36,6 +35,7 @@ namespace Main.Presentation.Map
 
         private void OnEnable()
         {
+            var avatarService = AvatarService.Instance;
             if (avatarService != null)
             {
                 avatarService.OnAvatarLoaded += HandleAvatarLoaded;
@@ -50,6 +50,7 @@ namespace Main.Presentation.Map
 
         private void OnDisable()
         {
+            var avatarService = AvatarService.Instance;
             if (avatarService != null)
             {
                 avatarService.OnAvatarLoaded -= HandleAvatarLoaded;
@@ -76,9 +77,10 @@ namespace Main.Presentation.Map
 
         public void LoadAvatar()
         {
+            var avatarService = AvatarService.Instance;
             if (avatarService == null)
             {
-                Debug.LogError("[PlayerAvatarController] AvatarService not assigned");
+                Debug.LogError("[PlayerAvatarController] AvatarService not found");
                 return;
             }
 
